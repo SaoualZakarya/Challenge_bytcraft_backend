@@ -18,12 +18,12 @@ after run this command :
  the dependencies will be installed in the folder node_modules .
 
    ## The acces to my db is from anywhere so you can use mine directly
-  # About  the end point that include in this project and you can use it 
+  # About  the endpoint that include in this project and you can use it 
 
     to create user            method :  POST 
   ## http://localhost:4000/api/user/create
 
-   to login user            method :  POST
+    to login user            method :  POST
    ## http://localhost:4000/api/user/login
 
     to refresh the user token            method:   GET
@@ -63,4 +63,4 @@ after run this command :
    ## http://localhost:4000/api/user/update-password
 
 
-   # if you want best practice using me database you can test the api with POSTMAN 
+   ## if you want best practice using me database you can test the api with POSTMAN 
