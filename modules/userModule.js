@@ -55,7 +55,7 @@ userSchema.methods.createPassowrdResetToken = async function () {
         // generate string as reset token
         const resetToken =  crypto.randomBytes(32).toString('hex')
         // We need to hash the resetToken before store it in the data base 
-        this.passwordResetToken = await crypto.hash('sha256').update(resetToken).digest('hex')
+        this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex')
         // just 10 min and the token will be expired
         this.passwordResetExpires = Date.now() + 10 * 60 * 1000 
         // we return the resest token

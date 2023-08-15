@@ -1,9 +1,10 @@
 const User = require('../modules/userModule')
 const asyncHandler = require('express-async-handler')
-const validateMongodbId = require('../utils/validateMongodbId')
 const {generateRefreshToken,generateAccessToken} = require('../config/generateTokens')
 const jwt = require('jsonwebtoken')
 const sendEmail = require('../controllers/emailController')
+const crypto = require('crypto')
+const validateMongodbId = require('../utils/validateMongodbId')
 // create user
 const createUser = asyncHandler (async (req,res)=>{
     const email = req.body.email 
@@ -104,12 +105,77 @@ const forgotPasswordToken = asyncHandler(async(req,res)=>{
         }
 
         sendEmail(data)
+        res.json(token)
 
     } catch(err){
         throw new Error(err)
     }
 })
 
+// reset password
+const resetPassword = asyncHandler(async(req,res)=>{
+    // new password
+    const {password} = req.body
+    const {token} = req.params
+    // we need to hash the token to compare it with the hashed one in the database
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex')
+    const user = await User.findOne({
+        passwordResetToken:hashedToken,
+        // to make sure that the token work just 10 min
+        passwordResetExpires:{$gt:Date.now()},
+        // to make sure change will be one time by day
+        passwordChangedAt: { $lt: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+    })
+    if (!user) throw new Error('Token expired , or your dapassed the limited chanse offred for you to change the password , Please try tomorow')
+    user.password = password
+    user.passwordResetToken = undefined
+    user.passwordResetExpires = undefined
+    user.passwordChangedAt = Date.now()
+     // Format date to a user-friendly string
+     const formattedPasswordChangedAt = new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+    }).format(user.passwordChangedAt);
 
+    await user.save()
+    res.json(user)
+})
 
-module.exports = {createUser,loginUser,handleRefreshToken,logout,forgotPasswordToken}
+// update user 
+const updateUser = asyncHandler(async(req,res)=>{
+    const id = req.user._id.toString()
+    validateMongodbId(id)
+    try{
+        const updateTheUser = await User.findByIdAndUpdate(id,{
+            name:req.body?.name,
+            email:req.body?.email,
+            mobile:req.body?.mobile,
+            }
+            ,{new:true})
+            res.json(updateTheUser)
+    }catch(err){
+        throw new Error(err)
+    }
+    
+})
+
+// update password 
+const updatePassword = asyncHandler(async(req,res)=>{
+    const {_id} = req.user
+    validateMongodbId(_id)
+    const {password} = req.body
+    const user = await  User.findById(_id)
+    if (password){
+        user.password = password
+        const updatedUser = await user.save()
+        res.json(updatedUser)
+    }else{
+        res.json(user)
+    }
+})
+
+module.exports = {createUser,loginUser,handleRefreshToken,logout,forgotPasswordToken,resetPassword,updateUser,updatePassword}
