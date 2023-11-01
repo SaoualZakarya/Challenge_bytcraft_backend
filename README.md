@@ -17,7 +17,8 @@ after run this command :
  ### npm install 
  the dependencies will be installed in the folder node_modules .
 
-   ## The acces to my db is from anywhere so you can use mine directly
+   ## You need to add your personal information email and mongodb id in .env file 
+   
   ## About  the endpoint that include in this project and you can use it 
 
     to create user            method :  POST 
